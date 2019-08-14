@@ -1,17 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "../includes.h"
 
 #define PORT 0x0da2
 #define IP_ADDR 0x7f000001
@@ -215,8 +202,6 @@ int download(int newfd, int fNum)
 		free(buff);
 	}
 
-		printf("1\n\n");
-
 
 	for(i = 0; i < len+3 ; i++)
 	{
@@ -229,12 +214,34 @@ int download(int newfd, int fNum)
 
 	int check = 1;
 
+	for(i = 0; i < len; ++i)
+	{
+		if(access(files[i+2],F_OK ) == -1)
+		{
+			check = -1;
+			break;
+		}
+	}
+	if (send(newfd, &check, sizeof(int), 0) < 0)
+	{
+		perror("Error could not send data");
+		return -1;
+	}
+
+	if(check == -1)
+	{
+		perror("requested files all do not exist");
+		exit(1);
+	}
+
 	int process = fork();
 
 	if(process == 0 )
 	{
 		if(len > 1)
+		{
 			execvp("zip",files);
+		}
 		exit(1);
 	}
 	else
@@ -256,12 +263,6 @@ int download(int newfd, int fNum)
 				perror("Could not open FILE with given name");
 				return -1;
 			}
-		}
-
-		if (send(newfd, &check, sizeof(int), 0) < 0)
-		{
-			perror("Error could not send data");
-			return -1;
 		}
 
 		if (fstat(fdin, &statbuf) < 0)
