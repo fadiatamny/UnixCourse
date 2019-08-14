@@ -1,5 +1,5 @@
 
-TARGET	=	program
+TARGET	=	client
 CC	= gcc
 CFLAGS	= -ansi -std=c99 -g -Wall
 

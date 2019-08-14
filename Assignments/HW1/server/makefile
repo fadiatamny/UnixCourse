@@ -1,5 +1,5 @@
 
-TARGET	=	program
+TARGET	=	server
 CC	= gcc
 CFLAGS	= -ansi -std=c99 -g -Wall
 

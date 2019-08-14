@@ -21,7 +21,6 @@ int upload(char *fileName, int sock, int len); //does a push request to the serv
 
 int main(int argc, char *argv[])
 {
-	int nrecv;
 	struct sockaddr_in s = {0};
 	s.sin_family = AF_INET;
 	s.sin_port = htons(PORT);
@@ -95,10 +94,10 @@ int main(int argc, char *argv[])
 int download(char **fileName, int sock, int len)
 {
 	int nrecv = 0;
-	int mode = 0;
 	int i = 0;
 	
 	char file[256];
+	
 	if(len > 1)
 		strcpy(file,"Files.zip");
 	else
@@ -114,7 +113,6 @@ int download(char **fileName, int sock, int len)
 	{
 		int nameLen = strlen(fileName[i+2]);
 
-		printf("%s %d\n\n",fileName[i+2],nameLen);
 		if (send(sock, &nameLen, sizeof(int), 0) < 0)
 		{
 			perror("Error sending data");
@@ -127,8 +125,6 @@ int download(char **fileName, int sock, int len)
 			return -1;
 		}
 	}
-
-	printf("1\n");
 
 	int check = 0;
 	if ((nrecv = recv(sock, &check, sizeof(int), 0)) < 0)
@@ -144,8 +140,6 @@ int download(char **fileName, int sock, int len)
 		return 0;
 	}
 
-
-	printf("1\n");
 	off_t size = 0;
 	if ((nrecv = recv(sock, &size, sizeof(size), 0)) < 0)
 	{
@@ -180,7 +174,6 @@ int download(char **fileName, int sock, int len)
 		return 0;
 	}
 
-	printf("1\n");
 	int fdout = 0;
 	if ((fdout = open(file, O_RDWR | O_CREAT | O_TRUNC, 0777)) < 0)
 	{
@@ -198,7 +191,6 @@ int download(char **fileName, int sock, int len)
 		perror("write error");
 		return 0;
 	}
-	printf("1\n");
 
 	void *dst;
 
@@ -220,14 +212,12 @@ int upload(char *fileName, int sock, int len)
 	int fdout = 0;
 	struct stat statbuf;
 	void *src = 0;
-	int mode = 1;
 	
 	if ((fdout = open(fileName, O_RDONLY)) < 0)
 	{
 		perror("Error could not open the file");
 		return -1;
 	}
-
 
 	if (send(sock, &len, sizeof(int), 0) < 0)
 	{

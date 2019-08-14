@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		struct stat statbuf;
 		struct sockaddr_in clientIn;
 		int clientInSize = sizeof clientIn;
 		int mode = 2;
@@ -307,6 +306,10 @@ int download(int newfd, int fNum)
 		free(files);
 	}
 
+	if(fork() == 0)
+		if(len > 1)
+			execlp("rm","-rf","Files.zip",NULL);
+
 	return 0;
 }
 
@@ -316,7 +319,6 @@ int upload(int newfd, int fNum)
 	int len = 0;
 	int fdin = 0;
 	int nrecv = 0;
-	struct stat statbuf;
 
 	for (i = 0; i < fNum; ++i)
 	{
@@ -386,7 +388,6 @@ int upload(int newfd, int fNum)
 
 		memset(src, 0, size);
 
-		//recive mmap
 		if ((nrecv = recv(newfd, src, size, 0)) <= 0)
 		{
 			perror("Error could not receive data");
