@@ -1,22 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "../includes.h"
 
 #define PORT 0x0da2
 #define IP_ADDR 0x7f000001
 
-int download(char *fileName, int sock, int len); // does a pull request from the server for n files 
+int download(char **fileName, int sock, int len); // does a pull request from the server for n files 
 int upload(char *fileName, int sock, int len); //does a push request to the server for n files
 
 int main(int argc, char *argv[])
@@ -47,28 +34,24 @@ int main(int argc, char *argv[])
 
 	if (send(sock, &fnum, sizeof(int), 0) < 0)
 	{
-		perror("send");
+		perror("Error could not send data");
 		return -1;
 	}
 
 	if (send(sock, &mode, sizeof(int), 0) < 0)
 	{
-		perror("send");
+		perror("Error could not send data");
 		return -1;
 	}
 
 	if (mode == 0)
 	{
-		for (i = 2; i < argc; ++i)
+		if(download(argv, sock, argc-2) == -1)
 		{
-			len = strlen(argv[i]);
-			if(download(argv[i], sock, len) == -1)
+			int x = 0;
+			if (send(sock, &x, sizeof(int), 0) < 0)
 			{
-				int x = 0;
-				if (send(sock, &x, sizeof(int), 0) < 0)
-				{
-					perror("Error occured while downloading a file");
-				}
+				perror("Error occured while downloading a file");
 			}
 		}
 
@@ -96,10 +79,17 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-int download(char *fileName, int sock, int len)
+int download(char **fileName, int sock, int len)
 {
 	int nrecv = 0;
 	int mode = 0;
+	int i = 0;
+	
+	char file[256];
+	if(len > 1)
+		strcpy(file,"Files.zip");
+	else
+		strcpy(file,fileName[2]);
 
 	if (send(sock, &len, sizeof(int), 0) < 0)
 	{
@@ -107,11 +97,25 @@ int download(char *fileName, int sock, int len)
 		return -1;
 	}
 
-	if (send(sock, fileName, len, 0) < 0)
+	for(i = 0; i < len; ++i)
 	{
-		perror("Error sending data");
-		return -1;
+		int nameLen = strlen(fileName[i+2]);
+
+		printf("%s %d\n\n",fileName[i+2],nameLen);
+		if (send(sock, &nameLen, sizeof(int), 0) < 0)
+		{
+			perror("Error sending data");
+			return -1;
+		}
+
+		if (send(sock, fileName[i+2], nameLen, 0) < 0)
+		{
+			perror("Error sending data");
+			return -1;
+		}
 	}
+
+	printf("1\n");
 
 	int check = 0;
 	if ((nrecv = recv(sock, &check, sizeof(int), 0)) < 0)
@@ -120,19 +124,15 @@ int download(char *fileName, int sock, int len)
 		return 0;
 	}
 
-	if(check == 0)
+	if (check != 1)
 	{
-		perror("Didnt receive data from server !");
-		return 0;
-	}
-
-	if (check == -1)
-	{
-		printf("%s is not on the server", fileName);
+		printf("one of the fiekes is not on the server");
 		perror("this file does not exist on the server.");
 		return 0;
 	}
 
+
+	printf("1\n");
 	off_t size = 0;
 	if ((nrecv = recv(sock, &size, sizeof(size), 0)) < 0)
 	{
@@ -167,8 +167,9 @@ int download(char *fileName, int sock, int len)
 		return 0;
 	}
 
+	printf("1\n");
 	int fdout = 0;
-	if ((fdout = open(fileName, O_RDWR | O_CREAT | O_TRUNC, 0777)) < 0)
+	if ((fdout = open(file, O_RDWR | O_CREAT | O_TRUNC, 0777)) < 0)
 	{
 		perror("can't open");
 		return 0;
@@ -184,6 +185,7 @@ int download(char *fileName, int sock, int len)
 		perror("write error");
 		return 0;
 	}
+	printf("1\n");
 
 	void *dst;
 
@@ -206,6 +208,13 @@ int upload(char *fileName, int sock, int len)
 	struct stat statbuf;
 	void *src = 0;
 	int mode = 1;
+	
+	if ((fdout = open(fileName, O_RDONLY)) < 0)
+	{
+		perror("Error could not open the file");
+		return -1;
+	}
+
 
 	if (send(sock, &len, sizeof(int), 0) < 0)
 	{
@@ -216,12 +225,6 @@ int upload(char *fileName, int sock, int len)
 	if (send(sock, fileName, len, 0) < 0)
 	{
 		perror("Error could not send data");
-		return -1;
-	}
-
-	if ((fdout = open(fileName, O_RDONLY)) < 0)
-	{
-		perror("Error could not open the file");
 		return -1;
 	}
 

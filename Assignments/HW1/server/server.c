@@ -1,17 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "../includes.h"
 
 #define PORT 0x0da2
 #define IP_ADDR 0x7f000001
@@ -130,21 +117,50 @@ int download(int newfd, int fNum)
 	void *src;
 	int i = 0;
 
-	for (i = 0; i < fNum; ++i)
+	if (recv(newfd, &len, sizeof(int), 0) <= 0)
 	{
-		if (recv(newfd, &len, sizeof(int), 0) <= 0)
+		perror("Error couldnt receive data");
+		return 0;
+	}
+
+	if(len == 0)
+	{
+		perror("Didnt receive data from client !");
+		return 0;
+	}
+
+	printf("len = %d\n\n",len);
+	char** files = (char**)malloc((len+3)*sizeof(char*));
+	memset(files,0,len+3);
+
+	files[0] = (char*)malloc(10*sizeof(char));
+	memset(files[0],0,10);
+	strcpy(files[0],"zip");
+	files[0][10]='\0';
+	files[1] = (char*)malloc(10*sizeof(char));
+	memset(files[1],0,10);
+	strcpy(files[1],"Files.zip");
+	files[1][10]='\0';
+
+	int nameLen = 0;
+	int c = 2;
+	for( i=0; i<len;++i)
+	{
+		if (recv(newfd, &nameLen, sizeof(int), 0) <= 0)
 		{
 			perror("Error couldnt receive data");
 			return 0;
 		}
 
-		if(len == 0)
+		printf("%d\n",nameLen);
+		
+		if(nameLen == 0)
 		{
 			perror("Didnt receive data from client !");
 			return 0;
 		}
 
-		char *buff = (char *)malloc((len + 1) * sizeof(char));
+		char *buff = (char *)malloc((nameLen + 1) * sizeof(char));
 		
 		if( buff == NULL)
 		{
@@ -152,13 +168,16 @@ int download(int newfd, int fNum)
 			return 0;
 		}
 
-		memset(buff, 0, len);
+		memset(buff, 0, nameLen);
 
-		if (recv(newfd, buff, len, 0) <= 0)
+
+		if (recv(newfd, buff, nameLen, 0) <= 0)
 		{
 			perror("Error couldnt receive data");
 			return 0;
 		}
+
+		printf("%s \n", buff);
 
 		if(buff[0] == 0)
 		{
@@ -166,19 +185,64 @@ int download(int newfd, int fNum)
 			return 0;
 		}
 
-		buff[len] = '\0';
-		int check = 1;
+		buff[nameLen] = '\0';
 
-		if ((fdin = open(buff, O_RDONLY)) < 0)
+		files[c] = (char*)malloc((nameLen+1)*sizeof(char));
+
+		if(files[c] == NULL)
 		{
-			perror("Could not open FILE with given name");
-			check = -1;
-			if (send(newfd, &check, sizeof(int), 0) < 0)
+			perror("Error allocating memory");
+			return -1;
+		}
+
+		memset(files[c],0,nameLen);
+		files[c][nameLen+1] = '\0';
+		strcpy(files[c],buff);
+		c++;
+		free(buff);
+	}
+
+		printf("1\n\n");
+
+
+	for(i = 0; i < len+3 ; i++)
+	{
+		printf("%s\n",files[i]);
+	}
+
+	printf("1\n\n");
+
+	files[len+3] = NULL;
+
+	int check = 1;
+
+	int process = fork();
+
+	if(process == 0 )
+	{
+		if(len > 1)
+			execvp("zip",files);
+		exit(1);
+	}
+	else
+	{
+        int status = 0;
+		wait(&status);
+		if(len > 1)
+		{
+			if ((fdin = open("Files.zip", O_RDONLY)) < 0)
 			{
-				perror("Error could not send data");
+				perror("Could not open FILE with given name");
 				return -1;
 			}
-			return -1;
+		}
+		else
+		{
+			if ((fdin = open(files[2], O_RDONLY)) < 0)
+			{
+				perror("Could not open FILE with given name");
+				return -1;
+			}
 		}
 
 		if (send(newfd, &check, sizeof(int), 0) < 0)
@@ -211,9 +275,9 @@ int download(int newfd, int fNum)
 			return -1;
 		}
 
-		printf("Sent %s to client",buff);
+		printf("Sent to client");
 
-		free(buff);
+		free(files);
 	}
 
 	return 0;
@@ -241,32 +305,32 @@ int upload(int newfd, int fNum)
 			return 0;
 		}
 
-		char *buff = (char *)malloc((len + 1) * sizeof(char));
+		char *files = (char *)malloc((len + 1) * sizeof(char));
 
-		if( buff == NULL)
+		if( files == NULL)
 		{
 			perror("Error could not allocate memory");
 			return 0;
 		}
 
-		memset(buff, 0, len);
+		memset(files, 0, len);
 
-		if (recv(newfd, buff, len, 0) <= 0)
+		if (recv(newfd, files, len, 0) <= 0)
 		{
 			perror("Error could not receive data");
 			return 0;
 		}
 
-		if(buff[0] == 0)
+		if(files[0] == 0)
 		{
 			perror("Didnt receive data from client !");
 			return 0;
 		}
 
-		buff[len] = '\0';
-		printf("buff = %s\n", buff);
+		files[len] = '\0';
+		printf("files = %s\n", files);
 
-		if ((fdin = open(buff, O_RDWR | O_CREAT | O_TRUNC, 0777)) < 0)
+		if ((fdin = open(files, O_RDWR | O_CREAT | O_TRUNC, 0777)) < 0)
 		{
 			perror("Error could not open the file");
 			return 0;
@@ -330,9 +394,9 @@ int upload(int newfd, int fNum)
 
 		memcpy(dst, src, size);
 
-		printf("Uploaded file %s",buff);
+		printf("Uploaded file %s",files);
 
-		free(buff);
+		free(files);
 	}
 
 	return 0;
