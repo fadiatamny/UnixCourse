@@ -141,7 +141,6 @@ int download(int newfd, int fNum)
 		return 0;
 	}
 
-	printf("len = %d\n\n",len);
 	char** files = (char**)malloc((len+3)*sizeof(char*));
 	memset(files,0,len+3);
 
@@ -163,8 +162,6 @@ int download(int newfd, int fNum)
 			perror("Error couldnt receive data");
 			return 0;
 		}
-
-		printf("%d\n",nameLen);
 		
 		if(nameLen == 0)
 		{
@@ -182,14 +179,11 @@ int download(int newfd, int fNum)
 
 		memset(buff, 0, nameLen);
 
-
 		if (recv(newfd, buff, nameLen, 0) <= 0)
 		{
 			perror("Error couldnt receive data");
 			return 0;
 		}
-
-		printf("%s \n", buff);
 
 		if(buff[0] == 0)
 		{
@@ -213,14 +207,6 @@ int download(int newfd, int fNum)
 		c++;
 		free(buff);
 	}
-
-
-	for(i = 0; i < len+3 ; i++)
-	{
-		printf("%s\n",files[i]);
-	}
-
-	printf("1\n\n");
 
 	files[len+3] = NULL;
 
@@ -304,11 +290,15 @@ int download(int newfd, int fNum)
 		printf("Sent to client");
 
 		free(files);
-	}
 
-	if(fork() == 0)
-		if(len > 1)
-			execlp("rm","-rf","Files.zip",NULL);
+		if(fork() == 0)
+		{
+			if(len > 1)
+			{
+				execlp("rm","-rf","Files.zip",NULL);
+			}
+		}
+	}
 
 	return 0;
 }
