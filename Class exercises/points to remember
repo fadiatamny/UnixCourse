@@ -1,0 +1,9 @@
+create socket
+enter it to fd
+the fd is sent to select 
+loop on select arr to check which fd is set 
+
+
+do we need select ? even tho you said not to use select.
+change the directory? to what ? why ? 
+

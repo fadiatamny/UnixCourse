@@ -20,8 +20,51 @@
 int download(int newfd, int fNum); //receives socket and number of files and uploads files from client to directory.
 int upload(int newfd, int fNum); //receives socket and number of files and sends files to client.
 
-int main(int argc, char *argv[])
+char* substr(char* str, int start); // substrings the string from index start
+
+int main(int argc, const char *argv[])
 {
+	if(argc>2)
+	{
+		char directory[256] = {0};
+
+		if(argv[1][0] == '.')
+		{
+			char buff[256] = {0};
+
+			getcwd(directory,sizeof(directory));
+			strcpy(buff,argv[1]);
+			substr(buff,0);
+			strcat(directory,buff);
+			
+		}
+		else
+		{
+			strcpy(directory,argv[1]);
+		}
+
+		struct stat sb;
+
+		if (stat(directory, &sb) != 0)
+		{
+			if(fork() == 0)
+			{
+				if(execlp("mkdir","mkdir",directory,NULL) == -1)
+				{
+					perror("Could not create directory");
+					exit(-1);
+				}
+				exit(1);	
+			}
+		}
+
+		if(chdir(directory)==-1)
+		{
+			perror("Could not change directory");
+			exit(-1);
+		}
+	}
+	
 	int listenS = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenS < 0)
 	{
@@ -120,6 +163,20 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
+
+char* substr(char* str, int start)
+{
+	if(start != strlen(str)-1)
+	{
+		for(int i = start; i < strlen(str)-1; ++i)
+		{
+			str[i] = str[i+1];
+		}
+	}
+	str[strlen(str)-1] = '\0';
+	return str;
+}
+
 
 int download(int newfd, int fNum)
 {
@@ -287,7 +344,7 @@ int download(int newfd, int fNum)
 			return -1;
 		}
 
-		printf("Sent to client");
+		printf("Sent to client\n");
 
 		free(files);
 
@@ -412,7 +469,7 @@ int upload(int newfd, int fNum)
 
 		memcpy(dst, src, size);
 
-		printf("Uploaded file %s",files);
+		printf("Uploaded file %s\n",files);
 
 		free(files);
 	}

@@ -1,0 +1,279 @@
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+#define rows 4
+#define cols 4
+
+struct payload{
+    int* value;
+    int row;
+    int column;
+    int matrixA[4][4];
+    int matrixB[4][4];
+};
+
+void* calcCell(void*);
+void printMatrix(int mat[4][4]);
+
+int main(int argc, const char* argv[])
+{
+    int first[rows][cols];
+    int second[rows][cols];
+    int result[rows][cols];
+
+    memset(first,0,sizeof(int)*rows*cols);
+    memset(second,0,sizeof(int)*rows*cols);
+    memset(result,0,sizeof(int)*rows*cols);
+    
+    int i = 0;
+    int j = 0;
+
+    for(i = 0; i < rows; ++i)
+    {
+        for(j = 0; j < cols; ++j)
+        {
+            first[i][j] = 2;
+            second[i][j] = 2;
+        }
+    }
+    
+    for(i = 0; i < rows; ++i)
+    {
+        for(j = 0; j < cols; ++j)
+        {
+
+        }
+    }
+    struct payload p1;
+    p1.value = &result[0][0];
+    p1.row = 0;
+    p1.column = 0;
+
+    memcpy(p1.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p1.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p2;
+    p2.value = &result[0][1];
+    p2.row = 0;
+    p2.column = 1;
+
+    memcpy(p2.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p2.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p3;
+    p3.value = &result[0][2];
+    p3.row = 0;
+    p3.column = 2;
+
+    memcpy(p3.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p3.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p4;
+    p4.value = &result[0][3];
+    p4.row = 0;
+    p4.column = 3;
+
+    memcpy(p4.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p4.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p5;
+    p5.value = &result[1][0];
+    p5.row = 1;
+    p5.column = 0;
+
+    memcpy(p5.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p5.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p6;
+    p6.value = &result[1][1];
+    p6.row = 1;
+    p6.column = 1;
+
+    memcpy(p6.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p6.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p7;
+    p7.value = &result[1][2];
+    p7.row = 1;
+    p7.column = 2;
+
+    memcpy(p7.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p7.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p8;
+    p8.value = &result[1][3];
+    p8.row = 1;
+    p8.column = 3;
+
+    memcpy(p8.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p8.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p9;
+    p9.value = &result[2][0];
+    p9.row = 2;
+    p9.column = 0;
+
+    memcpy(p9.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p9.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p10;
+    p10.value = &result[2][1];
+    p10.row = 2;
+    p10.column = 1;
+
+    memcpy(p10.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p10.matrixB,second,rows*cols*sizeof(int));
+
+
+        struct payload p11;
+    p11.value = &result[2][2];
+    p11.row = 2;
+    p11.column = 2;
+
+    memcpy(p11.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p11.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p12;
+    p12.value = &result[2][3];
+    p12.row = 2;
+    p12.column = 3;
+
+    memcpy(p12.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p12.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p13;
+    p13.value = &result[3][0];
+    p13.row = 3;
+    p13.column = 0;
+
+    memcpy(p13.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p13.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p14;
+    p14.value = &result[3][1];
+    p14.row = 3;
+    p14.column = 1;
+
+    memcpy(p14.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p14.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p15;
+    p15.value = &result[3][2];
+    p15.row = 3;
+    p15.column = 2;
+
+    memcpy(p15.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p15.matrixB,second,rows*cols*sizeof(int));
+
+        struct payload p16;
+    p16.value = &result[3][3];
+    p16.row = 3;
+    p16.column = 3;
+
+    memcpy(p16.matrixA,first,rows*cols*sizeof(int));
+    memcpy(p16.matrixB,second,rows*cols*sizeof(int));
+
+    pthread_t thread1;
+    if(pthread_create(&thread1,NULL,calcCell,&p1))
+        return -1;
+    pthread_t thread2;
+    if(pthread_create(&thread2,NULL,calcCell,&p2))
+        return -1;
+    pthread_t thread3;
+    if(pthread_create(&thread3,NULL,calcCell,&p3))
+        return -1;
+    pthread_t thread4;
+    if(pthread_create(&thread4,NULL,calcCell,&p4))
+        return -1;
+    pthread_t thread5;
+    if(pthread_create(&thread5,NULL,calcCell,&p5))
+        return -1;
+    pthread_t thread6;
+    if(pthread_create(&thread6,NULL,calcCell,&p6))
+        return -1;
+    pthread_t thread7;
+    if(pthread_create(&thread7,NULL,calcCell,&p7))
+        return -1;
+    pthread_t thread8;
+    if(pthread_create(&thread8,NULL,calcCell,&p8))
+        return -1;
+    pthread_t thread9;
+    if(pthread_create(&thread9,NULL,calcCell,&p9))
+        return -1;
+    pthread_t thread10;
+    if(pthread_create(&thread10,NULL,calcCell,&p10))
+        return -1;
+    pthread_t thread11;
+    if(pthread_create(&thread11,NULL,calcCell,&p11))
+        return -1;
+    pthread_t thread12;
+    if(pthread_create(&thread12,NULL,calcCell,&p12))
+        return -1;
+    pthread_t thread13;
+    if(pthread_create(&thread13,NULL,calcCell,&p13))
+        return -1;
+    pthread_t thread14;
+    if(pthread_create(&thread14,NULL,calcCell,&p14))
+        return -1;
+    pthread_t thread15;
+    if(pthread_create(&thread15,NULL,calcCell,&p15))
+        return -1;
+    pthread_t thread16;
+    if(pthread_create(&thread16,NULL,calcCell,&p16))
+        return -1;
+
+
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+    pthread_join(thread3, NULL);
+    pthread_join(thread4, NULL);
+    pthread_join(thread5, NULL);
+    pthread_join(thread6, NULL);
+    pthread_join(thread7, NULL);
+    pthread_join(thread8, NULL);
+    pthread_join(thread9, NULL);
+    pthread_join(thread10, NULL);
+    pthread_join(thread11, NULL);
+    pthread_join(thread12, NULL);
+    pthread_join(thread13, NULL);
+    pthread_join(thread14, NULL);
+    pthread_join(thread15, NULL);
+    pthread_join(thread16, NULL);
+    
+    printMatrix(result);
+
+
+    return 0;
+}
+
+void printMatrix(int mat[4][4])
+{
+    int i = 0;
+    int j = 0;
+    
+    for(i = 0; i < rows; ++i)
+    {
+        for(j = 0; j < cols; ++j)
+        {
+            printf("%d\t",mat[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void* calcCell(void* arg)
+{
+    int i = 0;
+    int x = 0;
+    int y = 0;
+    int res = 0;
+
+    struct payload* p = (struct payload*)arg;
+
+    for( i = 0; i < rows; ++i)
+    {
+        *(p->value) = *(p->value) + (p->matrixA[p->row][i] * p->matrixB[i][p->column]);
+    }   
+
+    return p;
+}
