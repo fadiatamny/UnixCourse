@@ -24,7 +24,7 @@ char* substr(char* str, int start); // substrings the string from index start
 
 int main(int argc, const char *argv[])
 {
-	if(argc>2)
+	if(argc>1)
 	{
 		char directory[256] = {0};
 
@@ -44,10 +44,11 @@ int main(int argc, const char *argv[])
 		}
 
 		struct stat sb;
-
+		int pid = 0;
+		int status = 0;
 		if (stat(directory, &sb) != 0)
 		{
-			if(fork() == 0)
+			if( (pid = fork()) == 0)
 			{
 				if(execlp("mkdir","mkdir",directory,NULL) == -1)
 				{
@@ -58,6 +59,8 @@ int main(int argc, const char *argv[])
 			}
 		}
 
+		waitpid(pid,&status,0);
+		
 		if(chdir(directory)==-1)
 		{
 			perror("Could not change directory");
